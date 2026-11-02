@@ -117,6 +117,9 @@
     if (!id) return null;
     return storyPacksList().find((p) => p.id === id) || null;
   }
+  /** 預設故事包：打工仔輓歌（可用時優先；否則退回第一個可用包） */
+  const DEFAULT_STORY_PACK_ID = "office_ballad";
+
   function ensureActiveStoryPack() {
     const packs = storyPacksList();
     const available = packs.filter((p) => p.status === "available");
@@ -124,7 +127,10 @@
       const cur = storyPackById(state.activeStoryPackId);
       if (cur && cur.status === "available") return state.activeStoryPackId;
     }
-    if (available.length >= 1) {
+    const preferred = storyPackById(DEFAULT_STORY_PACK_ID);
+    if (preferred && preferred.status === "available") {
+      state.activeStoryPackId = preferred.id;
+    } else if (available.length >= 1) {
       state.activeStoryPackId = available[0].id;
     } else {
       state.activeStoryPackId = null;
@@ -760,6 +766,8 @@
     speed: 1,
     /** 可選故事包（模組）；唔取代非線性人生骨架 */
     activeStoryPackId: null,
+    /** 玩家有冇主動揀過故事包 */
+    storyPackUserPicked: false,
     /** 故事包詳情頁正睇邊包 */
     storyPackDetailId: null,
     /** 魂焰扭蛋保底（帳號級跨世；persist） */
@@ -2294,6 +2302,8 @@
       lifeFlags: cloneObj(state.lifeFlags, {}),
       factions: cloneObj(state.factions, {}),
       activeStoryPackId: state.activeStoryPackId || null,
+      /** 玩家有冇主動揀故事包（true 就唔會跟隨新預設） */
+      storyPackUserPicked: !!state.storyPackUserPicked,
       cardCounts: cloneObj(state.cardCounts, {}),
       demoSeedVersion: state.demoSeedVersion,
       fighterStars: cloneObj(state.fighterStars, {}),
@@ -2436,6 +2446,13 @@
       state.minigame = null;
       state.activeStoryPackId = (data.activeStoryPackId && storyPackById(data.activeStoryPackId))
         ? data.activeStoryPackId : null;
+      /* 舊存檔若仍停留在舊預設（初入香江）而玩家未主動改過，跟隨新預設打工仔輓歌 */
+      if (data.activeStoryPackId && data.storyPackUserPicked !== true
+          && data.activeStoryPackId !== DEFAULT_STORY_PACK_ID
+          && storyPackById(DEFAULT_STORY_PACK_ID)
+          && storyPackById(DEFAULT_STORY_PACK_ID).status === "available") {
+        state.activeStoryPackId = DEFAULT_STORY_PACK_ID;
+      }
 
       if (data.cardCounts && typeof data.cardCounts === "object") state.cardCounts = { ...data.cardCounts };
       if (data.demoSeedVersion != null) state.demoSeedVersion = data.demoSeedVersion;
@@ -4039,11 +4056,12 @@
       body = `<div class="pack-list">${packs.map((p) => {
         const soon = p.status !== "available";
         const on = state.activeStoryPackId === p.id;
+        const isDefault = p.id === DEFAULT_STORY_PACK_ID;
         return `
         <button type="button" class="pack-card${soon ? " coming" : ""}${on ? " active-pack" : ""}" data-pack="${esc(p.id)}" data-help="btn-story">
           <img src="${esc(p.cover || "")}" alt="${esc(p.name)}" />
           <div class="pack-meta">
-            <div class="pack-name">${esc(p.name)}</div>
+            <div class="pack-name">${esc(p.name)}${isDefault ? `<span class="pack-default-tag">預設</span>` : ""}</div>
             <div class="pack-blurb">${esc(p.blurb || "")}</div>
             <span class="pack-status ${soon ? "soon" : "ok"}">${soon ? "即將" : (on ? "使用中" : "可選")}</span>
           </div>
@@ -4212,8 +4230,9 @@
       startChain.onclick = () => {
         // t369：tale 鏈優先（通用故事引擎，有角色弧線）
         if (isTaleChain) {
-          state.activeStoryPackId = pack.id;
-          const run = taleBeginRun(pack.id);
+      state.activeStoryPackId = pack.id;
+      state.storyPackUserPicked = true;
+      const run = taleBeginRun(pack.id);
           const first = run ? taleNodeById(run.nodeId) : null;
           if (!first) {
             toast("此故事鏈未設定完成");
@@ -4232,6 +4251,7 @@
           return;
         }
         state.activeStoryPackId = pack.id;
+        state.storyPackUserPicked = true;
         officeBeginRun();
         state.selectedEvent = first;
         state.eventConfirmOpen = false;
@@ -4245,6 +4265,7 @@
         return;
       }
       state.activeStoryPackId = pack.id;
+      state.storyPackUserPicked = true;
       toast("已記「" + pack.name + "」氣氛——人生仍非直線");
       render();
     };

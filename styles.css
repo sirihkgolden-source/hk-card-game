@@ -9418,3 +9418,17 @@ html, body {
   .tea-detail-mask .tea-detail-buy { grid-column: 2; grid-row: 4; }
   .tea-detail-mask .album-detail-foot { grid-column: 1 / -1; grid-row: 5; margin-top: 4px; }
 }
+
+/* 預設故事包標記 */
+.pack-default-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 4px;
+  border: 1.5px solid #0a0610;
+  background: var(--neon-gold);
+  color: #1a1020;
+  font-size: 0.52rem;
+  font-weight: 900;
+  vertical-align: middle;
+}
