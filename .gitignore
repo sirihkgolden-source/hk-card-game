@@ -1,0 +1,19 @@
+# 開發暫存／測試腳本（唔上傳）
+_update/
+_selftest_*.js
+_selftest_*.json
+_probe*.js
+_probe*.html
+_testlib_*.js
+_test_final_survival.js
+_expand_office.js
+_tune_office.js
+*.bak-*
+*.tgz
+*.tgz.*
+*.bin
+
+# 系統檔
+.DS_Store
+Thumbs.db
+desktop.ini
