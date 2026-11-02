@@ -4068,6 +4068,15 @@
         </button>`;
       }).join("")}</div>`;
     }
+    /*
+     * t377：顯示「仲有 N 個」提示。
+     * 總導演手機睇唔到「打工仔輓歌」——實際上它係第 6 個，被切在清單底部，
+     * 而清單冇任何「可以捲」嘅視覺提示，玩家以為只得 5 個。
+     */
+    const hiddenCount = Math.max(0, (packs || []).length - 4);
+    const moreHint = hiddenCount > 0
+      ? `<div class="pack-list-more" id="pack-list-more">▾ 向下捲，仲有 ${hiddenCount} 個故事 ▾</div>`
+      : "";
     root.innerHTML = `
       <div class="hud">
         <span class="chip year"><span class="dot"></span>故事包</span>
@@ -4076,9 +4085,22 @@
       <div class="ribbon">故事包</div>
       <p class="sub">可選模組注入主線氣氛——人生骨架永遠非直線</p>
       ${body}
+      ${moreHint}
       <button class="btn ghost" id="btn-pack-back" type="button" data-help="btn-back">返主頁</button>
       <div id="home-toast" class="home-toast" hidden></div>
     `;
+
+    // t377：捲到底就收起提示
+    const packListEl = $(".pack-list", root);
+    const moreEl = $("#pack-list-more", root);
+    if (packListEl && moreEl) {
+      const syncMore = () => {
+        const atBottom = packListEl.scrollTop + packListEl.clientHeight >= packListEl.scrollHeight - 8;
+        moreEl.style.display = atBottom ? "none" : "";
+      };
+      packListEl.addEventListener("scroll", syncMore, { passive: true });
+      syncMore();
+    }
     const toast = (msg) => {
       const el = $("#home-toast", root);
       if (!el) return;
@@ -8884,6 +8906,19 @@
       skills.forEach((sk) => ensureZero(sk.id));
       equips.forEach((it) => ensureZero(it.id));
       stubs.forEach(ensureZero);
+      /*
+       * t375b：舊存檔亦要補 default_team。
+       * 原因：種子版本未變（271）→ 唔會重種子，但舊存檔可能完全冇 default_team 嘅三張卡，
+       * 而 pruneUnownedRefs() 之後 team 會變空（下面另有空隊保險，但補卡更徹底）。
+       * 只補「未擁有」嘅，唔會洗走玩家收藏。
+       */
+      (DATA.default_team || []).forEach((id) => {
+        if (!id) return;
+        if ((state.cardCounts[id] | 0) < 1) {
+          state.cardCounts[id] = 1;
+          if (state.fighterStars[id] == null) state.fighterStars[id] = 1;
+        }
+      });
       pruneUnownedRefs();
     }
 

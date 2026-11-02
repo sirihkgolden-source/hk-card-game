@@ -4747,6 +4747,27 @@ button.side-icon {
   flex: 1;
   min-height: 0;
   padding: 2px 2px 8px;
+  /* t377：淡出遮罩提示「仲有更多」（捲到底會自動消失） */
+  background-image: linear-gradient(to top, rgba(8, 4, 16, 0.95), rgba(8, 4, 16, 0));
+  background-repeat: no-repeat;
+  background-size: 100% 46px;
+  background-position: bottom;
+  background-attachment: local;
+}
+/* t377：清單底部提示（有更多時顯示） */
+.pack-list-more {
+  flex: 0 0 auto;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  letter-spacing: 0.06em;
+  padding: 2px 0 0;
+  animation: pack-more-bounce 1.4s ease-in-out infinite;
+}
+@keyframes pack-more-bounce {
+  0%, 100% { opacity: 0.55; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(2px); }
 }
 /* t359：橫屏列表只有 ~214px 高、一次見唔到兩張卡 —— 改兩欄，一屏睇多幾張 */
 @media (orientation: landscape) and (max-width: 1024px) {
