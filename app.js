@@ -1293,8 +1293,8 @@
     const all = DATA.events || [];
     let picked = [];
     if (isSpecialBattleYear(y)) {
-      const pool = all.filter((e) => e.category === "special_battle");
-      const src = pool.length ? pool : all.filter((e) => e.battle);
+      const pool = all.filter((e) => e.category === "special_battle" && !eventExcludedFromYearPool(e));
+      const src = pool.length ? pool : all.filter((e) => e.battle && !eventExcludedFromYearPool(e));
       const sh = shuffleCopy(src);
       for (let i = 0; i < 4; i++) {
         picked.push(sh[i % Math.max(1, sh.length)]);
@@ -4837,9 +4837,16 @@
     // 走完鏈：算結局
     const fin = officeFinishRun();
     if (fin && fin.endingEv) {
-      // 標記路線旗標，讓結局事件可以被 require_flag 檢查（只用於顯示，不影響發獎）
       if (!state.lifeFlags || typeof state.lifeFlags !== "object") state.lifeFlags = {};
       state.lifeFlags["office_route_" + fin.routeKey] = 1;
+      /*
+       * t375：同時寫入 `office_ending_<id>`（同結局事件自身嘅 flag_on_complete 一致）。
+       * 原本只寫 `office_route_*`，而 `eventExcludedFromYearPool()` 檢查 `office_ending_*`
+       * → 排除永遠唔生效 → 完成後「第一日返工」仍然會再出現（總導演回報的循環問題）。
+       */
+      const endFlag = fin.endingEv.flag_on_complete || ("office_ending_" + fin.routeKey);
+      state.lifeFlags[endFlag] = 1;
+      state.lifeFlags["office_ending_" + fin.routeKey] = 1;
       state.officeEndAge = officeAge(run);
       state.selectedEvent = fin.endingEv;
       state.officeRun = null;
@@ -7109,7 +7116,11 @@
    * t364：故事包分支事件唔可以當普通年度事件隨機抽出。
    *  - 結局事件（office_ending）：只可以由分支鏈走到底觸發
    *  - 中途節點（office_node 但唔係鏈頭）：只可以由上一步推進觸發
-   * 只有鏈頭（office_entry）可以入年度池，當作「開始呢個故事」。
+   *  - **鏈頭（office_entry）**：只可以「未玩過」時入池
+   *
+   * t375 修正（總導演回報：「完成後，事件再次出現『第一日返工』的選項」）：
+   * 原本鏈頭永遠可以入年度池，所以行完一次之後仍會再抽到，變成無限循環。
+   * 現在：只要已達成任何一個結局（`office_ending_*` 旗標），鏈頭亦唔再入池。
    */
   function eventExcludedFromYearPool(ev) {
     if (!ev) return true;
@@ -7117,8 +7128,15 @@
     if (ev.office_node) {
       const pack = officePack();
       const entry = pack && pack.office_entry;
-      return !!entry && ev.id !== entry;
+      // 非鏈頭 → 一律排除
+      if (!entry || ev.id !== entry) return true;
+      // 鏈頭：若已經行完任何結局，就唔再出（一個故事包只玩一次）
+      const flags = state.lifeFlags || {};
+      const alreadyFinished = Object.keys(flags).some((k) => k.indexOf("office_ending_") === 0);
+      return alreadyFinished;
     }
+    // t369：tale 鏈節點亦唔入年度池（同 office 一樣只由分支鏈觸發）
+    if (ev.tale_node) return true;
     return false;
   }
 
@@ -8754,6 +8772,28 @@
     ensureGearShape();
     const owned = (id) => albumCountRaw(id) > 0;
     state.team = (state.team || []).filter((id) => owned(id));
+    /*
+     * t374：P0 保險 —— 修剪之後如果隊伍變空，自動由已擁有嘅卡補回。
+     * 原因：state.team 預設為 default_team，但 demo 種子只隨機抽 5 張，
+     * 有機會一張都唔中；原本修剪後 team 變空 → 準備頁無法開始遊戲（實測 100% 重現）。
+     * 現在即使種子再變，玩家都一定有卡可以揀。
+     */
+    if (!state.team.length) {
+      const cap = fighterPocketCap();
+      const fallback = [];
+      // 先試 default_team 中有擁有嘅
+      (DATA.default_team || []).forEach((id) => {
+        if (fallback.length < cap && owned(id)) fallback.push(id);
+      });
+      // 再唔夠就由卡冊任意補
+      if (fallback.length < 1) {
+        (DATA.fighters || []).forEach((f) => {
+          if (fallback.length >= Math.min(3, cap)) return;
+          if (f && f.id && owned(f.id) && !fallback.includes(f.id)) fallback.push(f.id);
+        });
+      }
+      state.team = fallback;
+    }
     state.deploy = (state.deploy || []).filter((id) => state.team.includes(id));
     if (state.equipFocus && !state.team.includes(state.equipFocus)) {
       state.equipFocus = state.team[0] || null;
@@ -8808,6 +8848,19 @@
         if (!f.id) return;
         next[f.id] = 1;
         state.fighterStars[f.id] = 1; // t322 種子新卡 ★1
+      });
+      /*
+       * t374：P0 修正 —— 種子必須包含 default_team（C241 泥頭車／C244 纜車廂／C248 晨跑徑）。
+       *
+       * 原本只隨機抽 5 張，default_team 嘅三張經常抽唔到；
+       * 而 `state.team` 初始化為 default_team、隨後 `pruneUnownedRefs()` 會剔走未擁有嘅卡
+       * → team 變空 → 準備頁只有「＋」、`btn-ready` 永久 disabled → **玩家完全無法開始遊戲**。
+       * 實測：全新開局 100% 重現（default_team 三張一張都冇）。
+       */
+      (DATA.default_team || []).forEach((id) => {
+        if (!id) return;
+        next[id] = Math.max(1, next[id] | 0);
+        if (state.fighterStars[id] == null) state.fighterStars[id] = 1;
       });
       shuffleCopy(skills).slice(0, 5).forEach((sk) => {
         if (!sk.id) return;
