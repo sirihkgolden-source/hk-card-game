@@ -6572,41 +6572,75 @@
         won: "破關成功",
         lost: "破關失敗",
       })[mg.phase] || "";
+      const isResult = mg.phase === "won" || mg.phase === "lost";
+      const timePct = Math.max(0, Math.min(100, (remain / timeLimitSec) * 100));
+      const timeWarn = remain <= 8;
+
+      // 關卡指示燈
+      const dots = [];
+      for (let r = 1; r <= maxRounds; r++) {
+        const cls = mg.phase === "won" || r < mg.round ? "done" : (r === mg.round && !isResult ? "now" : "");
+        dots.push(`<span class="mg-round-dot${cls ? " " + cls : ""}"></span>`);
+      }
+
+      // 鍵位（圓形霓虹）
       const pads = [];
       for (let i = 0; i < padCount; i++) {
         const lit = mg.flashIdx === i ? " lit" : "";
-        const disabled = (mg.phase !== "input") ? " disabled" : "";
+        const dis = mg.phase !== "input" ? " disabled" : "";
         pads.push(
-          `<button type="button" class="mg-pad${lit}${disabled}" data-pad="${i}" style="--mg-c:${PAD_COLORS[i]}" ${mg.phase !== "input" ? "disabled" : ""} aria-label="${PAD_LABELS[i]}">` +
+          `<button type="button" class="mg-pad mg-pad-neon${lit}" data-pad="${i}" style="--mg-c:${PAD_COLORS[i]}"${dis} aria-label="${PAD_LABELS[i]}">` +
           `<span class="mg-pad-label">${PAD_LABELS[i]}</span></button>`
         );
       }
+
+      // 輸入進度
+      const progress = mg.phase === "input" && mg.sequence.length
+        ? `<div class="mg-input-progress">${mg.sequence
+            .map((_, i) => `<i class="${i < mg.inputIdx ? "on" : ""}"></i>`)
+            .join("")}</div>`
+        : "";
+
       let cta = "";
       if (mg.phase === "intro") {
         cta = `<button class="btn gold" id="btn-mg-start" type="button">開始破關</button>
           <button class="btn ghost" id="btn-mg-skip" type="button">放棄（半獎）</button>`;
-      } else if (mg.phase === "won" || mg.phase === "lost") {
+      } else if (isResult) {
         cta = `<button class="btn gold" id="btn-mg-ok" type="button" data-help="btn-ok">繼續</button>
           <button class="btn ghost danger btn-abandon-compact" id="btn-abandon" data-help="btn-abandon">放棄今世</button>`;
       } else {
         cta = `<button class="btn ghost" id="btn-mg-skip" type="button">放棄（半獎）</button>`;
       }
-      const rewardLine = (mg.phase === "won" || mg.phase === "lost")
+
+      const rewardLine = isResult
         ? `<div class="soft-panel">${esc(mg.message)}<br/>今世賺了 <b style="color:var(--neon-gold)">+${mg.rewardSoul}</b> 膠幣` +
           `${mg.rewardXp ? ` · 經驗 +${mg.rewardXp}` : ""}` +
           `${mg.rewardGold ? ` · 金幣 +${mg.rewardGold}` : ""}` +
           `${mg.won && ev.attrs_delta ? ` · ${esc(formatAttrsDelta(ev.attrs_delta).join("、") || "")}` : ""}` +
           ` · <span style="color:var(--neon-cyan)">下一歲 ${state.age + 1}歲（第 ${state.year + 1} 年）</span></div>`
-        : `<div class="mg-hud"><span>第 ${mg.round}/${maxRounds} 關</span><span>剩餘 ${remain}s</span><span>${esc(phaseLabel)}</span></div>
-           <div class="bubble neon mg-msg">${esc(mg.message)}</div>`;
+        : "";
 
       root.innerHTML = `
         ${lifeHudHtml()}
         <div class="ribbon">${ageRibbon(esc(ev.name) + " · 小遊戲")}</div>
         <div class="mg-wrap">
-          <p class="sub mg-sub">${esc(ev.desc || "記憶破關")}</p>
+          <div class="mg-arcade">
+            <div class="mg-rounds" aria-hidden="true">${dots.join("")}</div>
+            <div class="mg-timebar${timeWarn ? " warn" : ""}"><i style="width:${timePct}%"></i></div>
+            <div class="mg-status">
+              <span>第 <b>${mg.round}</b>／${maxRounds} 關</span>
+              <span class="mg-phase">${esc(phaseLabel)}</span>
+              <span>剩餘 <b>${remain}</b>s</span>
+            </div>
+            ${
+              isResult
+                ? `<div class="mg-result-banner ${mg.won ? "win" : "lose"}">${mg.won ? "★ 破關成功 ★" : "破關失敗"}</div>`
+                : `<div class="bubble neon mg-msg">${esc(mg.message)}</div>`
+            }
+            ${progress}
+            <div class="mg-pads mg-pads-neon" style="--mg-n:${padCount}">${pads.join("")}</div>
+          </div>
           ${rewardLine}
-          <div class="mg-pads" style="--mg-n:${padCount}">${pads.join("")}</div>
         </div>
         <div class="soft-cta mg-cta">${cta}</div>
         ${storyDockHtml()}
@@ -6648,6 +6682,19 @@
     };
 
     const startWatchRound = () => {
+      /*
+       * t378b：清走上一關殘留嘅「輸入超時」計時器。
+       *
+       * 原本只靠 `if (mg.phase === "input")` 判斷，但實測發現：
+       * 第 1 關輸入完 → 進入第 2 關 watch → 播完序列 → 第 2 關 input，
+       * 而第 1 關嗰個 10 秒超時計時器仍然存在，若它喺第 2 關 input 期間到期，
+       * 就會立即判「輸入逾時」（實測第 2 關只有 300ms 反應時間）。
+       * 這裡只取消舊嘅 input 超時，唔碰全局限時（mg.deadlineAt 嗰個）。
+       */
+      if (mg.inputTimer) {
+        clearTimeout(mg.inputTimer);
+        mg.inputTimer = null;
+      }
       // 每關序列長度 = round+1（第1關長2…第3關長4）
       const len = mg.round + 1;
       mg.sequence = [];
@@ -6669,19 +6716,28 @@
           mg.message = "依同樣順序點選鍵位。";
           mg.inputDeadlineAt = Date.now() + 10000;
           paint();
-          schedule(() => {
+          // t378b：記錄計時器 id，方便下一關開始時取消（避免舊超時誤判新關卡）
+          if (mg.inputTimer) clearTimeout(mg.inputTimer);
+          mg.inputTimer = schedule(() => {
             if (mg.phase === "input") endRun(false, "輸入逾時——半獎，人生繼續。");
           }, 10000);
           return;
         }
         mg.flashIdx = mg.sequence[step];
+        // t378：亮起音效（每個鍵位不同音高，聽感上幫記憶）
+        gachaBeep(420 + mg.flashIdx * 110, 0.09, 0.03);
         paint();
+        /*
+         * t378：亮起時間隨序列長度遞增（480ms → 最長 620ms），
+         * 因舊版固定 480ms，第 3 關 4 步時玩家經常追唔切。
+         */
+        const litMs = Math.min(620, 480 + (mg.sequence.length - 2) * 45);
         schedule(() => {
           mg.flashIdx = -1;
           paint();
           step += 1;
           schedule(flashNext, 220);
-        }, 480);
+        }, litMs);
       };
       schedule(flashNext, 400);
     };
@@ -6694,12 +6750,31 @@
       }
       const expect = mg.sequence[mg.inputIdx];
       if (idx !== expect) {
-        endRun(false, "順序有誤——半獎，人生繼續。");
+        // t378：錯誤鍵位抖動 + 正確鍵位閃一下，即時視覺回饋
+        const wrongEl = root.querySelector(`.mg-pad[data-pad="${idx}"]`);
+        if (wrongEl) {
+          wrongEl.classList.add("miss");
+          setTimeout(() => wrongEl && wrongEl.classList.remove("miss"), 380);
+        }
+        const rightEl = root.querySelector(`.mg-pad[data-pad="${expect}"]`);
+        if (rightEl) {
+          rightEl.classList.add("hit");
+          setTimeout(() => rightEl && rightEl.classList.remove("hit"), 320);
+        }
+        gachaBeep(160, 0.12, 0.06);
+        schedule(() => endRun(false, "順序有誤——半獎，人生繼續。"), 380);
         return;
       }
       mg.inputIdx += 1;
       mg.flashIdx = idx;
       paint();
+      // t378：命中波紋
+      const hitEl = root.querySelector(`.mg-pad[data-pad="${idx}"]`);
+      if (hitEl) {
+        hitEl.classList.add("hit");
+        setTimeout(() => hitEl && hitEl.classList.remove("hit"), 320);
+      }
+      gachaBeep(520 + idx * 90, 0.05, 0.035);
       schedule(() => {
         mg.flashIdx = -1;
         if (mg.inputIdx >= mg.sequence.length) {

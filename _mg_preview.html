@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>小遊戲預覽</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { background: #0a0610; margin: 0; padding: 12px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+  .frame { width: 374px; }
+  .frame > h3 { color: #ffd36a; font: 900 12px/1.4 system-ui; margin: 0 0 6px; letter-spacing: .1em; }
+  .screen.demo { position: relative; height: 700px; padding: 8px 10px 10px; gap: 6px; }
+</style>
+</head>
+<body>
+
+  <div class="frame">
+    <h3>intro</h3>
+    <div class="screen demo has-bg bg-soft" data-screen="minigame">
+      <div class="mg-wrap"><div class="mg-arcade">
+    <div class="mg-rounds"><span class="mg-round-dot now"></span><span class="mg-round-dot"></span><span class="mg-round-dot"></span></div>
+    <div class="mg-timebar"><i style="width:100%"></i></div>
+    <div class="mg-status">
+      <span>第 <b>1</b>／3 關</span>
+      <span class="mg-phase">準備</span>
+      <span>剩餘 <b>35</b>s</span>
+    </div>
+    <div class="bubble neon mg-msg">依序記住亮起的鍵位，再依同樣順序點選。</div>
+    
+    <div class="mg-pads mg-pads-neon"><button type="button" class="mg-pad mg-pad-neon" data-pad="0" style="--mg-c:#ff4d6a" disabled><span class="mg-pad-label">赤</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="1" style="--mg-c:#3dfff0" disabled><span class="mg-pad-label">青</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="2" style="--mg-c:#ffd36a" disabled><span class="mg-pad-label">金</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="3" style="--mg-c:#c9a0ff" disabled><span class="mg-pad-label">紫</span></button></div>
+  </div></div>
+    </div>
+  </div>
+  <div class="frame">
+    <h3>watch</h3>
+    <div class="screen demo has-bg bg-soft" data-screen="minigame">
+      <div class="mg-wrap"><div class="mg-arcade">
+    <div class="mg-rounds"><span class="mg-round-dot done"></span><span class="mg-round-dot now"></span><span class="mg-round-dot"></span></div>
+    <div class="mg-timebar"><i style="width:80%"></i></div>
+    <div class="mg-status">
+      <span>第 <b>2</b>／3 關</span>
+      <span class="mg-phase">記住序列</span>
+      <span>剩餘 <b>28</b>s</span>
+    </div>
+    <div class="bubble neon mg-msg">第 2 關：記住 3 步序列。</div>
+    
+    <div class="mg-pads mg-pads-neon"><button type="button" class="mg-pad mg-pad-neon" data-pad="0" style="--mg-c:#ff4d6a" disabled><span class="mg-pad-label">赤</span></button><button type="button" class="mg-pad mg-pad-neon lit" data-pad="1" style="--mg-c:#3dfff0" disabled><span class="mg-pad-label">青</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="2" style="--mg-c:#ffd36a" disabled><span class="mg-pad-label">金</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="3" style="--mg-c:#c9a0ff" disabled><span class="mg-pad-label">紫</span></button></div>
+  </div></div>
+    </div>
+  </div>
+  <div class="frame">
+    <h3>input</h3>
+    <div class="screen demo has-bg bg-soft" data-screen="minigame">
+      <div class="mg-wrap"><div class="mg-arcade">
+    <div class="mg-rounds"><span class="mg-round-dot done"></span><span class="mg-round-dot now"></span><span class="mg-round-dot"></span></div>
+    <div class="mg-timebar warn"><i style="width:17.142857142857142%"></i></div>
+    <div class="mg-status">
+      <span>第 <b>2</b>／3 關</span>
+      <span class="mg-phase">依序點選</span>
+      <span>剩餘 <b>6</b>s</span>
+    </div>
+    <div class="bubble neon mg-msg">依同樣順序點選鍵位。</div>
+    <div class="mg-input-progress"><i class="on"></i><i class=""></i><i class=""></i></div>
+    <div class="mg-pads mg-pads-neon"><button type="button" class="mg-pad mg-pad-neon" data-pad="0" style="--mg-c:#ff4d6a"><span class="mg-pad-label">赤</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="1" style="--mg-c:#3dfff0"><span class="mg-pad-label">青</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="2" style="--mg-c:#ffd36a"><span class="mg-pad-label">金</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="3" style="--mg-c:#c9a0ff"><span class="mg-pad-label">紫</span></button></div>
+  </div></div>
+    </div>
+  </div>
+  <div class="frame">
+    <h3>win</h3>
+    <div class="screen demo has-bg bg-soft" data-screen="minigame">
+      <div class="mg-wrap"><div class="mg-arcade">
+    <div class="mg-rounds"><span class="mg-round-dot done"></span><span class="mg-round-dot done"></span><span class="mg-round-dot done"></span></div>
+    <div class="mg-timebar"><i style="width:34.285714285714285%"></i></div>
+    <div class="mg-status">
+      <span>第 <b>3</b>／3 關</span>
+      <span class="mg-phase">破關成功</span>
+      <span>剩餘 <b>12</b>s</span>
+    </div>
+    <div class="mg-result-banner win">★ 破關成功 ★</div>
+    
+    <div class="mg-pads mg-pads-neon"><button type="button" class="mg-pad mg-pad-neon" data-pad="0" style="--mg-c:#ff4d6a" disabled><span class="mg-pad-label">赤</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="1" style="--mg-c:#3dfff0" disabled><span class="mg-pad-label">青</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="2" style="--mg-c:#ffd36a" disabled><span class="mg-pad-label">金</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="3" style="--mg-c:#c9a0ff" disabled><span class="mg-pad-label">紫</span></button></div>
+  </div></div>
+    </div>
+  </div>
+  <div class="frame">
+    <h3>lose</h3>
+    <div class="screen demo has-bg bg-soft" data-screen="minigame">
+      <div class="mg-wrap"><div class="mg-arcade">
+    <div class="mg-rounds"><span class="mg-round-dot done"></span><span class="mg-round-dot"></span><span class="mg-round-dot"></span></div>
+    <div class="mg-timebar warn"><i style="width:8.571428571428571%"></i></div>
+    <div class="mg-status">
+      <span>第 <b>2</b>／3 關</span>
+      <span class="mg-phase">破關失敗</span>
+      <span>剩餘 <b>3</b>s</span>
+    </div>
+    <div class="mg-result-banner lose">破關失敗</div>
+    
+    <div class="mg-pads mg-pads-neon"><button type="button" class="mg-pad mg-pad-neon" data-pad="0" style="--mg-c:#ff4d6a" disabled><span class="mg-pad-label">赤</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="1" style="--mg-c:#3dfff0" disabled><span class="mg-pad-label">青</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="2" style="--mg-c:#ffd36a" disabled><span class="mg-pad-label">金</span></button><button type="button" class="mg-pad mg-pad-neon" data-pad="3" style="--mg-c:#c9a0ff" disabled><span class="mg-pad-label">紫</span></button></div>
+  </div></div>
+    </div>
+  </div>
+</body>
+</html>
