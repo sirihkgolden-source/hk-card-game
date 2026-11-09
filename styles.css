@@ -4629,15 +4629,25 @@ button.side-icon {
 .event-card {
   position: relative;
 }
+/*
+ * t414：卡片分類標籤（身世／命運／主線／獎勵…）由左上角改為**中央置中**。
+ *
+ * 舊版：position: absolute; top: 6px; left: 6px —— 貼在卡片左上角，
+ * 太角落，玩家容易忽略（總導演：「改為在中央置中位置」）。
+ *
+ * 新版：水平置中（left: 50% + translateX(-50%)），垂直貼卡片頂部少許。
+ */
 .event-card .ev-cat-pill {
   position: absolute;
   top: 6px;
-  left: 6px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 2px 8px 2px 4px;
+  padding: 2px 9px 2px 5px;
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
@@ -4647,6 +4657,10 @@ button.side-icon {
   border: 1px solid rgba(255,255,255,0.25);
   backdrop-filter: blur(2px);
   pointer-events: none;
+  max-width: calc(100% - 12px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .event-card .ev-cat-dot {
   width: 8px;
@@ -5200,7 +5214,8 @@ button.side-icon {
   justify-content: center;
   position: relative;
   /* t363：標題列收細（34px 掣 → 28px；padding 2px → 0） */
-  padding: 0 32px;
+  /* t411：右上角「×」已改為底部「回主頁」，標題置中唔再需要左右留位 */
+  padding: 0;
   min-height: 26px;
   flex-shrink: 0;
 }
@@ -5212,24 +5227,20 @@ button.side-icon {
   color: var(--text);
   text-shadow: 0 0 12px rgba(45, 226, 255, 0.35);
 }
-.album-close {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2.5px solid #0a0610;
-  background: linear-gradient(160deg, #3a2048, #1a0e28);
-  color: var(--text);
-  font-size: 1.1rem;
-  font-weight: 900;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 0 0 2px rgba(255, 45, 149, 0.35), 0 2px 0 #0a0610;
+/* t411：卡冊底部「回主頁」（取代右上角 ×） */
+.album-home-btn {
+  flex: 0 0 auto;
+  width: 100%;
+  margin: 2px 0 0;
 }
-.album-close:active { transform: translateY(-50%) scale(0.94); }
+/* t412：茶記底部「回主頁」
+   tab-bar 係 position:absolute 浮在底部（約 62px 高 + 10px 邊距），
+   所以呢個掣要 flex 固定在茶記內容下方，並預留 tab-bar 的高度，唔可以重疊。 */
+.tea-screen .album-home-btn {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 4px 4px calc(62px + 12px);
+}
 
 .album-tabs {
   display: grid;
@@ -9718,7 +9729,7 @@ html, body {
   background: linear-gradient(90deg, #2de2ff, #ffd36a, #ff2d95);
   transition: width 0.3s ease;
 }
-/* 清單：佔滿剩餘高度、可滚動，唔會被底欄遮住 */
+/* 清單：佔滿剩餘高度、可滾動，唔會被底欄遮住 */
 .dm-list {
   flex: 1 1 auto !important;
   min-height: 0;
@@ -10505,4 +10516,457 @@ html, body {
   padding: 7px 10px !important;
   min-height: 0 !important;
   margin: 2px 0 4px;
+}
+
+/* ===================================================================
+   t406：office_ballad 四拍敘事
+   intro（進場短敘） → dialogue（分頁對白） → choose（選擇） → outcome（專屬後果）
+   =================================================================== */
+
+/* 進場短敘 */
+.of-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 2px;
+}
+.of-intro-art {
+  width: 100%;
+  max-height: 34vh;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #0a0610;
+}
+.of-intro-name {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--neon-gold, #ffcc6a);
+  letter-spacing: 0.04em;
+}
+.of-intro-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.62;
+  color: #efe6f8;
+}
+
+/* 分頁對白 */
+.of-dialogue-paged {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(26, 16, 40, 0.72);
+  border: 1.5px solid #2a1c36;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.of-dialogue-paged .dlg-line {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.of-dialogue-foot {
+  margin-top: auto;
+  text-align: right;
+}
+.of-page-no {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: rgba(233, 220, 255, 0.5);
+  letter-spacing: 0.06em;
+}
+
+/* 專屬後果 */
+.of-outcome {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 2px solid rgba(61, 255, 240, 0.45);
+  background:
+    linear-gradient(180deg, rgba(61, 255, 240, 0.1), rgba(10, 6, 18, 0.6));
+  animation: ofOutcomeIn 0.42s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+@keyframes ofOutcomeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.of-outcome-kicker {
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--neon-cyan, #3dfff0);
+  margin-bottom: 4px;
+}
+.of-outcome-choice {
+  margin: 0 0 8px;
+  font-size: 0.86rem;
+  font-weight: 900;
+  line-height: 1.4;
+  color: #fff;
+}
+.of-outcome-body {
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: #efe6f8;
+  white-space: pre-wrap;
+}
+
+/* CTA 掣（分階段） */
+.of-cta-main {
+  width: 100%;
+  margin: 0 0 4px;
+}
+
+/* 詳情頁未解鎖提示 */
+.of-locked-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  margin: 4px 0 8px;
+  border-radius: 10px;
+  border: 1.5px dashed rgba(255, 200, 106, 0.4);
+  background: rgba(255, 200, 106, 0.06);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  color: rgba(255, 233, 184, 0.82);
+}
+.of-locked-ico { font-size: 1rem; line-height: 1.2; }
+
+/* 結局卡：全屏停住 */
+.of-ending-scroll { padding-bottom: 6px; }
+
+/* t408（§2.5）：結局對白要有底板／安全區，唔可以裸疊街景被裁 */
+.of-ending-dialogue {
+  margin: 8px 4px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 8, 20, 0.78);
+  backdrop-filter: blur(2px);
+}
+.of-ending-dialogue .dlg-line {
+  font-size: 0.93rem;
+  line-height: 1.72;
+  color: #f6f0ff;
+}
+.of-ending-dialogue .dlg-who { color: var(--neon-cyan, #3dfff0); }
+.of-ending-voice {
+  margin: 8px 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-left: 3px solid var(--neon-pink, #ff2d95);
+  background: rgba(255, 45, 149, 0.08);
+}
+.of-ending-who {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--neon-pink, #ff2d95);
+  margin-bottom: 3px;
+}
+.of-ending-voice p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: #efe6f8;
+}
+.of-ending-ok {
+  width: 100%;
+  margin: 0 0 4px;
+}
+/* t408（§2.7）：說明故事包歲月獨立，避免玩家以為人生歲數被重置 */
+.of-ending-note {
+  margin: 0 2px 8px;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  text-align: center;
+  color: rgba(233, 220, 255, 0.62);
+}
+
+@media (orientation: landscape) and (max-width: 1024px) {
+  .of-intro-art { max-height: 26vh; }
+  .of-outcome-body { font-size: 0.76rem; line-height: 1.55; }
+  .of-dialogue-paged { min-height: 70px; }
+}
+
+/* ===================================================================
+ * t408（§2.1）輓歌 UI：收緊空白、加大字級
+ *
+ * 病徵：intro／dialogue／choose／outcome 大片空紫底，正文顯得細。
+ * 做法：內容區改 min-height:auto + flex 收斂（唔再撐滿），
+ *       正文／對白字級升一檔以上，padding 削減。
+ * =================================================================== */
+
+/* 內容區：貼內容，唔再為撐滿而留大片空底 */
+.of-hud { flex: 0 0 auto; }
+.office-node {
+  flex: 1 1 auto;
+  min-height: auto;
+  max-height: 100%;
+  gap: 10px;
+  padding: 12px 12px 14px;
+  /* 內容貼頂，多餘空間平均分到上下（唔會全部堆在下面） */
+  justify-content: flex-start;
+}
+
+/* 進場短敘：字級明顯加大、圖片撐滿剩餘空間（唔留大片空底） */
+.of-intro {
+  gap: 9px;
+  padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.of-intro-art {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 120px;
+  max-height: 46vh;
+  object-fit: cover;
+}
+.of-intro-name {
+  font-size: 1.24rem;
+  line-height: 1.3;
+}
+.of-intro-desc {
+  font-size: 0.99rem;
+  line-height: 1.78;
+  color: #f6f0ff;
+}
+
+/* 對白：加大、加行距，取消固定 min-height（唔好為空底撐高） */
+.of-dialogue-paged {
+  min-height: 0;
+  padding: 12px 13px;
+  gap: 10px;
+}
+.of-dialogue-paged .dlg-line {
+  font-size: 0.96rem;
+  line-height: 1.72;
+}
+.of-dialogue-paged .dlg-who {
+  font-size: 0.9rem;
+}
+.of-page-no {
+  font-size: 0.66rem;
+  color: rgba(233, 220, 255, 0.62);
+}
+
+/* 選擇卡：加大可讀性 */
+.of-choice { padding: 13px 13px 14px; }
+.of-choice-tag { font-size: 0.62rem; }
+.of-choice-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.of-choice-unknown { font-size: 0.68rem; }
+
+/* 後果場：字級加大、減 padding */
+.of-outcome { padding: 13px 14px 15px; }
+.of-outcome-kicker { font-size: 0.68rem; }
+.of-outcome-choice {
+  font-size: 1.02rem;
+  line-height: 1.45;
+  margin-bottom: 9px;
+}
+.of-outcome-body {
+  font-size: 0.99rem;
+  line-height: 1.82;
+  color: #f6f0ff;
+}
+
+/* t408（§2.4）：後果場顯示人生旗標（口碑／人情／疲勞／風險） */
+.of-outcome-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.of-flag-chip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #d8f7ff;
+  background: rgba(61, 255, 240, 0.11);
+  border: 1px solid rgba(61, 255, 240, 0.34);
+}
+
+/* 「不設獎賞」提示：縮細並靠下，唔搶中央位置 */
+.of-note {
+  font-size: 0.58rem;
+  opacity: 0.72;
+  margin-top: auto;
+  padding-top: 2px;
+}
+
+/* ===================================================================
+ * t408（§1.3）命運後果場
+ * =================================================================== */
+.fate-result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 11px 12px;
+  border-radius: 12px;
+  border: 2px solid rgba(61, 255, 240, 0.4);
+  background: linear-gradient(180deg, rgba(61, 255, 240, 0.09), rgba(10, 6, 18, 0.62));
+  animation: ofOutcomeIn 0.4s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+.fate-result-art {
+  width: 100%;
+  max-height: 26vh;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 2px solid #0a0610;
+}
+.fate-result-story {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.8;
+  color: #f6f0ff;
+}
+.fate-result-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.fate-result-bar .srb-ico { color: var(--neon-gold, #ffcc6a); }
+.fate-result-bar .srb-text {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: rgba(233, 220, 255, 0.75);
+}
+
+/* 籌碼：負值用減益色（紅），唔用綠色劇透「好壞」但數字要睇得明 */
+.srb-chip.attr.down {
+  background: rgba(255, 77, 106, 0.16);
+  border-color: rgba(255, 77, 106, 0.45);
+  color: #ffb3c1;
+}
+
+/* ===================================================================
+ * t408（§3.2）通用「事件經過」拍：過程＋可見結果，先撳繼續才過年
+ * =================================================================== */
+.eb-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 11px 12px 13px;
+  border-radius: 12px;
+  border: 3px solid #0a0610;
+  background: linear-gradient(180deg, #1a1028f2, #100818f7);
+  box-shadow: 0 0 0 2px rgba(45, 226, 255, 0.28), 0 3px 0 #0a0610;
+}
+.eb-art-frame {
+  border-radius: 9px;
+  overflow: hidden;
+  border: 2px solid #0a0610;
+}
+.eb-art {
+  display: block;
+  width: 100%;
+  max-height: 30vh;
+  object-fit: cover;
+}
+.eb-name {
+  font-size: 1.16rem;
+  font-weight: 900;
+  line-height: 1.32;
+  color: var(--neon-gold, #ffcc6a);
+  letter-spacing: 0.03em;
+}
+.eb-desc {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.8;
+  color: #f6f0ff;
+}
+.eb-dialogue {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: rgba(26, 16, 40, 0.72);
+  border: 1.5px solid #2a1c36;
+}
+.eb-dialogue .dlg-line {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+.eb-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.eb-result .srb-ico { color: var(--neon-gold, #ffcc6a); }
+.eb-result .srb-text {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: rgba(233, 220, 255, 0.75);
+}
+
+/* HUD 短暫 +N 跳字（§1.3 第 4 點）
+   t414：改為中央置中（原本貼左上角，太角落且易同 HUD 疊住） */
+.hud-float {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+  /* 中央置中：left:50% + translateX(-50%)，左右各留 14px 安全邊 */
+  left: 50%;
+  max-width: calc(100vw - 28px);
+  transform: translateX(-50%);
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 2px solid #0a0610;
+  background: rgba(20, 12, 30, 0.9);
+  box-shadow: 0 0 0 2px rgba(255, 204, 106, 0.42), 0 4px 16px rgba(0, 0, 0, 0.55);
+  font-size: 0.86rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.32;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--neon-gold, #ffcc6a);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  animation: hudFloatUp 1.6s ease-out both;
+}
+@keyframes hudFloatUp {
+  0%   { opacity: 0; transform: translate(-50%, 8px) scale(0.92); }
+  14%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  72%  { opacity: 1; transform: translate(-50%, -8px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -20px) scale(0.97); }
+}
+
+@media (orientation: landscape) and (max-width: 1024px) {
+  .of-intro-art { max-height: 24vh; }
+  .of-intro-desc { font-size: 0.9rem; line-height: 1.62; }
+  .of-dialogue-paged .dlg-line { font-size: 0.88rem; line-height: 1.55; }
+  .of-outcome-body { font-size: 0.9rem; line-height: 1.6; }
+  .fate-result-art { max-height: 20vh; }
+  .fate-result-story { font-size: 0.9rem; line-height: 1.62; }
 }
